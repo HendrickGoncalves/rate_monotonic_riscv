@@ -45,7 +45,6 @@ void initTIM1(void);
 uint8_t checkExecutionTime(void);
 task * getMostPriority(void);
 void updateCurrentTask(void);
-void updateFSM(void);
 void context_switch(int ind);
 int mdc(int a, int b);
 int mmc(int a, int b);

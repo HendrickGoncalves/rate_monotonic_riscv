@@ -18,6 +18,7 @@ static uint8_t started = 0;
 static int curl;
 static uint8_t finished = 1;
 static uint8_t running = 0;
+static uint8_t end = 0;
 static int endClock = 0;
 char *scheduleResult;
 
@@ -102,10 +103,6 @@ task * getMostPriority(void) {
 	return auxTask;
 }
 
-void updateFSM(void) {
-	currentState = (state_func)(*currentState)();
-}
-
 void timer1ctc_handler(void) {
 	it = 1;
 }
@@ -142,8 +139,9 @@ void scheduler(void) {
 			currentState = (state_func)(*currentState)();
 		} else {
 			printf("Schedule finished: %d\n", endClock);
-			showResult();
-			delay_ms(500);
+			showResult(); 
+			end = 1;
+			return;
 		}
 
 	}
@@ -157,15 +155,19 @@ void idle_task(void) {
 		scheduler();
 
 	while (1) {			/* thread body */
-		printf("\nidle task...\n");
+		
+		if(!end) {
+			printf("\nidle task...\n");
 
-		it = 0;
-		finished = 1;
+			it = 0;
+			finished = 1;
 
-		scheduleResult[strlen(scheduleResult)] = '.';
-		updateCurrentTask();
+			scheduleResult[strlen(scheduleResult)] = '.';
+			updateCurrentTask();
 
-		context_switch(N_TASKS-1); //pula pro scheduler
+			context_switch(N_TASKS-1); //pula pro scheduler
+		} else 
+			return;
 	}
 }
 
@@ -179,22 +181,25 @@ void task2(void) {
 
 	while (1) {			/* thread body */
 
-		ptr = list_get(l, 2);
+		if(!end) {
+			ptr = list_get(l, 2);
 
-		if(ptr->state == RUNNING) {
-			printf("\ntask 2...\n");
+			if(ptr->state == RUNNING) {
+				printf("\ntask 2...\n");
 
-			ptr->state = READY;
+				ptr->state = READY;
 
-			it = 0;
-			finished = 1;
+				it = 0;
+				finished = 1;
 
-			scheduleResult[strlen(scheduleResult)] = 'C';
-			currentTask->execTime = currentTask->execTime > 0 ? currentTask->execTime - 1 : 0;
-			updateCurrentTask();
-		}
+				scheduleResult[strlen(scheduleResult)] = 'C';
+				currentTask->execTime = currentTask->execTime > 0 ? currentTask->execTime - 1 : 0;
+				updateCurrentTask();
+			}
 
-		context_switch(N_TASKS-1); //pula pro scheduler
+			context_switch(N_TASKS-1); //pula pro scheduler
+		} else
+			return;
 	}
 }
 
@@ -209,18 +214,21 @@ void task1(void) {
 	while (1) {			/* thread body */
 		ptr = list_get(l, 1);
 
-		if(ptr->state == RUNNING) {
-			ptr->state = READY;
-			
-			it = 0;
-			finished = 1;
-			printf("task 1...\n");
+		if(!end) {
+			if(ptr->state == RUNNING) {
+				ptr->state = READY;
+				
+				it = 0;
+				finished = 1;
+				printf("task 1...\n");
 
-			scheduleResult[strlen(scheduleResult)] = 'B';
-			currentTask->execTime = currentTask->execTime > 0 ? currentTask->execTime - 1 : 0;		
-			updateCurrentTask();
-		}
-		context_switch(N_TASKS-1); //pula pro scheduler
+				scheduleResult[strlen(scheduleResult)] = 'B';
+				currentTask->execTime = currentTask->execTime > 0 ? currentTask->execTime - 1 : 0;		
+				updateCurrentTask();
+			}
+			context_switch(N_TASKS-1); //pula pro scheduler
+		} else 
+			return;
 	}
 }
 
@@ -235,22 +243,24 @@ void task0(void) {
 	while (1) {			/* thread body */
 		ptr = list_get(l, 0);
 		
+		if(!end) {
+			if(ptr->state == RUNNING) {
+				scheduleResult[strlen(scheduleResult)] = 'A';
 
-		if(ptr->state == RUNNING) {
-			scheduleResult[strlen(scheduleResult)] = 'A';
+				ptr->state = READY;
+				
+				it = 0;
+				finished = 1;
+				printf("task 0...\n");
 
-			ptr->state = READY;
-			
-			it = 0;
-			finished = 1;
-			printf("task 0...\n");
+				currentTask->execTime = currentTask->execTime > 0 ? currentTask->execTime - 1 : 0;
+				
+				updateCurrentTask();
+			}
 
-			currentTask->execTime = currentTask->execTime > 0 ? currentTask->execTime - 1 : 0;
-			
-			updateCurrentTask();
-		}
-
-		context_switch(N_TASKS-1); //pula pro scheduler
+			context_switch(N_TASKS-1); //pula pro scheduler	
+		} else
+			return;
 	}
 }
 
@@ -331,15 +341,13 @@ void initStruct(void) {
 	printf("MMC: %d\n", endClock);
 }
 
-void show_list(void)
-{
+void show_list(void) {
 	int32_t i;
 	task *p;
 	
 	printf("\nshowing the list...\n");
 	for (i = 0; i < list_count(l); i++){
 		p = list_get(l, i);
-		
 		printf("%d: %d -- %d -- %d\n", i, p->execTime, p->period, p->deadline);
 	}
 }
@@ -357,8 +365,6 @@ int main(void) {
     initTIM1();
 
 	task0();
-
-	while(1);
 
 	return 0;
 }
