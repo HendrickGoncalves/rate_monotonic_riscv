@@ -42,7 +42,6 @@ void * run(void);
 void *memcpy(void *dst, const void *src, uint32_t n);
 uint8_t checkExecutionTime(void);
 void initTIM1(void);
-void initTaskValue(void);
 uint8_t checkExecutionTime(void);
 task * getMostPriority(void);
 void updateCurrentTask(void);
@@ -51,6 +50,7 @@ void context_switch(int ind);
 int mdc(int a, int b);
 int mmc(int a, int b);
 void showResult(void);
+void show_list(void);
 
 /* ----------------------------------TASKS---------------------------------------*/
 
