@@ -83,7 +83,7 @@ void * run(void) {
 
 void * waitNextIT(void) {
 	//printf("Waiting next IT: %d -- %d -- Time: %d\n", it, finished, TIMER1);
-	delay_ms(100);
+	//delay_ms(100);
 
 	return (it && finished) ? getNextTask : waitNextIT;
 }
@@ -99,19 +99,14 @@ task * getMostPriority(void) {
     task *auxTask;
    
 	auxTask->period = MAX_PERIOD;
+	printf("Debug Max period: %d\n", auxTask->period);
 
 	for(int i = 0; i < list_count(l); i++) {
 		p = list_get(l, i);
 
-		/* 
-		
-		
-		DEBUGAR TEMPO 11!! E VER POR QUE SELECIONOU A TAREFA ERRADA!
-		
-		*/
-		if(auxTask->period > p->period && p->execTime > 0) {
+		printf("%d: ExecTime %d --- Period: %d\n", i, p->execTime, p->period);
+		if(auxTask->period > p->period && p->execTime > 0) 
 			auxTask = p;
-		}
 	}
 	
 	auxTask->execTime = (auxTask->period == MAX_PERIOD) ? 0 : auxTask->execTime;
@@ -129,8 +124,8 @@ void initTaskValue(void) {
 
     for (int i = 0; i < N_TASKS-2; i++) {
 		tasks[i].ind = i;
-        tasks[i].execTime = (random() % 5) + 1;
-        tasks[i].period = tasks[i].execTime + (random() % 5) + 1;
+        tasks[i].execTime = (random() % 8) + 1;
+        tasks[i].period = tasks[i].execTime + (random() % 10) + 1;
 		periods[i] = tasks[i].period;
         tasks[i].deadline = tasks[i].period;
 		printf("%d: %d -- %d -- %d\n", i, tasks[i].execTime, tasks[i].period, tasks[i].deadline);
@@ -195,11 +190,13 @@ void idle_task(void) {
 
 	while (1) {			/* thread body */
 		printf("\nidle task...\n");
-		delay_ms(100);
+		//delay_ms(100);
 		it = 0;
 		finished = 1;
 
 		scheduleResult[strlen(scheduleResult)] = '.';
+		updateCurrentTask();
+
 		context_switch(N_TASKS-1); //pula pro scheduler
 	}
 }
@@ -214,7 +211,7 @@ void task2(void) {
 		idle_task();
 
 	while (1) {			/* thread body */
-		delay_ms(100);
+		//delay_ms(100);
 
 		ptr = list_get(l, 2);
 
@@ -251,7 +248,7 @@ void task1(void) {
 			it = 0;
 			finished = 1;
 			printf("task 1...\n");
-			delay_ms(100);
+			//delay_ms(100);
 			
 			scheduleResult[strlen(scheduleResult)] = '1';
 			currentTask->execTime = currentTask->execTime > 0 ? currentTask->execTime - 1 : 0;		
@@ -273,7 +270,7 @@ void task0(void) {
 	while (1) {			/* thread body */
 		ptr = list_get(l, 0);
 		
-		delay_ms(100);
+		//delay_ms(100);
 
 		if(ptr->state == RUNNING) {
 			scheduleResult[strlen(scheduleResult)] = '0';
@@ -309,9 +306,10 @@ void updateCurrentTask(void) {
 	for (int i = 0; i < list_count(l); i++) {
 		ptr = list_get(l, i);
 
+		printf("%d: Deadline %d -- Clock %d\n", i, ptr->deadline, clock);
 		//printf("Task %d -- Period %d -- Deadline %d -- ExecTime %d\n", ptr->ind, ptr->period, ptr->deadline, ptr->execTime);
 		if(ptr->deadline == clock) {
-			ptr->deadline *= 2;
+			ptr->deadline += auxTasks[ptr->ind].deadline;
 
 			if(ptr->execTime == 0) 
 				ptr->execTime = auxTasks[ptr->ind].execTime;
