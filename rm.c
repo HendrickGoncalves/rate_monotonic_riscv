@@ -25,19 +25,19 @@ char *scheduleResult;
 /* ----------------------------------------- STATES -------------------------------------------*/
 
 void * getNextTask(void) {
-	int ind;
+	task *ptr;
 
 	clock++;
 
 	it = 0;
 	finished = 0;
 
-	ind = currentTask->ind;
+	ptr = currentTask;
     currentTask = getMostPriority();
 
-	if(ind != currentTask->ind) {
-		if(currentTask->execTime > 0)
-			currentTask->state = BLOCKED;
+	if(ptr->ind != currentTask->ind && clock > 1) {
+		if(ptr->execTime > 0) 
+			ptr->state = BLOCKED;
 	}
 
     return checkExecTime;
@@ -87,18 +87,17 @@ uint8_t checkExecutionTime(void) {
 
 task * getMostPriority(void) {
 	task *p;
+	uint32_t period = MAX_PERIOD;
     task *auxTask;
    
-	auxTask->period = MAX_PERIOD;
-
 	for(int i = 0; i < list_count(l); i++) {
 		p = list_get(l, i);
 
-		if(auxTask->period > p->period && p->execTime > 0) 
+		if(period > p->period && p->execTime > 0) {
 			auxTask = p;
+			period = p->period;
+		}
 	}
-
-	auxTask->execTime = (auxTask->period == MAX_PERIOD) ? 0 : auxTask->execTime;
 
 	return auxTask;
 }
@@ -284,7 +283,13 @@ void updateCurrentTask(void) {
 
 			if(ptr->execTime == 0) 
 				ptr->execTime = auxTasks[ptr->ind].execTime;
+			else 
+				ptr->prempFlag = 1;
+		} else if(ptr->prempFlag == 1 && ptr->execTime == 0) {
+			ptr->execTime = auxTasks[ptr->ind].execTime;
+			ptr->prempFlag = 0;
 		}
+		
 	}
 }
 
@@ -316,23 +321,23 @@ void initStruct(void) {
 
 	tasks[0].ind = 0;
 	tasks[0].state = READY;
-	tasks[0].execTime = 2;
-	tasks[0].deadline = 4;
-	tasks[0].period = 4;
+	tasks[0].execTime = 3;
+	tasks[0].period = 9;
+	tasks[0].deadline = 9;
 	periods[0] = tasks[0].period;
 
 	tasks[1].ind = 1;
 	tasks[1].state = READY;
-	tasks[1].execTime = 1;
-	tasks[1].deadline = 6;
-	tasks[1].period = 6;
+	tasks[1].execTime = 4;
+	tasks[1].period = 12;
+	tasks[1].deadline = 12;
 	periods[1] = tasks[1].period;
 
 	tasks[2].ind = 2;
 	tasks[2].state = READY;
-	tasks[2].execTime = 3;
-	tasks[2].deadline = 12;
-	tasks[2].period = 12;
+	tasks[2].execTime = 4;
+	tasks[2].period = 14;
+	tasks[2].deadline = 14;
 	periods[2] = tasks[2].period;
 	
 	memcpy(auxTasks, tasks, sizeof(tasks));

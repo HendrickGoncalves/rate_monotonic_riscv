@@ -5,7 +5,7 @@
 #define RM_H
 
 #define N_TASKS 5
-#define MAX_PERIOD 255
+#define MAX_PERIOD 4000000
 
 typedef enum task_state{
     BLOCKED = 0,
@@ -20,9 +20,10 @@ typedef enum task_type {
 
 typedef struct task_info {
     int ind;
-    uint8_t execTime;
-    uint8_t period;
-    uint8_t deadline;
+    uint32_t execTime;
+    uint32_t period;
+    uint32_t deadline;
+    uint8_t prempFlag;
     taskState state;
 } task;
 
