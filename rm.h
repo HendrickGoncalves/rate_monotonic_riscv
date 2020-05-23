@@ -50,7 +50,6 @@ void context_switch(int ind);
 int mdc(int a, int b);
 int mmc(int a, int b);
 void showResult(void);
-void show_list(void);
 
 /* ----------------------------------TASKS---------------------------------------*/
 

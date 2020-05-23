@@ -107,14 +107,14 @@ void timer1ctc_handler(void) {
 }
 
 void initTIM1(void) {
-    TIMER1PRE = TIMERPRE_DIV64; 
+    TIMER1PRE = TIMERPRE_DIV16; 
 
 	/* unlock TIMER1 for reset */
 	TIMER1 = TIMERSET;
 	TIMER1 = 0;
 
-	/* TIMER1 frequency: 5ms */
-	TIMER1CTC = 50000; //counter compare
+	/* TIMER1 frequency: 10ms */
+	TIMER1CTC = 15625; //counter compare
 
 	/* enable interrupt mask for TIMER1 CTC events */
 	TIMERMASK |= MASK_TIMER1CTC;
@@ -156,7 +156,7 @@ void idle_task(void) {
 	while (1) {			/* thread body */
 		
 		if(!end) {
-			printf("\nidle task...\n");
+			printf("idle task...\n");
 
 			it = 0;
 			finished = 1;
@@ -184,7 +184,7 @@ void task2(void) {
 			ptr = list_get(l, 2);
 
 			if(ptr->state == RUNNING) {
-				printf("\ntask 2...\n");
+				printf("task 2...\n");
 
 				ptr->state = READY;
 
@@ -321,40 +321,29 @@ void initStruct(void) {
 
 	tasks[0].ind = 0;
 	tasks[0].state = READY;
-	tasks[0].execTime = 3;
-	tasks[0].period = 9;
-	tasks[0].deadline = 9;
+	tasks[0].execTime = 6;
+	tasks[0].period = 15;
+	tasks[0].deadline = 15;
 	periods[0] = tasks[0].period;
 
 	tasks[1].ind = 1;
 	tasks[1].state = READY;
-	tasks[1].execTime = 4;
-	tasks[1].period = 12;
-	tasks[1].deadline = 12;
+	tasks[1].execTime = 3;
+	tasks[1].period = 10;
+	tasks[1].deadline = 10;
 	periods[1] = tasks[1].period;
 
 	tasks[2].ind = 2;
 	tasks[2].state = READY;
-	tasks[2].execTime = 4;
-	tasks[2].period = 14;
-	tasks[2].deadline = 14;
+	tasks[2].execTime = 1;
+	tasks[2].period = 5;
+	tasks[2].deadline = 5;
 	periods[2] = tasks[2].period;
 	
 	memcpy(auxTasks, tasks, sizeof(tasks));
 
 	endClock = mmc(periods[0],mmc(periods[1],periods[2]));
 	printf("MMC: %d\n", endClock);
-}
-
-void show_list(void) {
-	int32_t i;
-	task *p;
-	
-	printf("\nshowing the list...\n");
-	for (i = 0; i < list_count(l); i++){
-		p = list_get(l, i);
-		printf("%d: %d -- %d -- %d\n", i, p->execTime, p->period, p->deadline);
-	}
 }
 
 int main(void) {
